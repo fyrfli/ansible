@@ -1,0 +1,74 @@
+---
+- name: Backup jupiter
+  hosts: localhost
+  gather_facts: true
+  vars:
+    archive_tag: "{{ansible_date_time.date.replace('-','')}}"
+    backup_dir: "/u/backups/{{archive_tag}}"
+    backup_targets: 
+      - /home/camille
+      - /etc
+      - /home/docker
+      - /u/dockerFiles/volumes
+  tasks:
+    - name: Create backup directory
+      file:
+        path: "{{backup_dir}}"
+        state: directory
+    - name: Archive files
+      become: true
+      archive:
+        path: "{{item}}"
+        exclusion_patterns:
+          - '**/*tar.gz'
+          - '**/*tgz'
+          - '**/*deb'
+          - '**/*zip'
+          - '**/[0-9]*'
+        dest: "{{backup_dir}}/{{item.rsplit('/')[-1]}}-{{archive_tag}}.tgz"
+      tags:
+        - file-archives
+      loop:  "{{backup_targets}}"
+    - name: Touch the target archive file for joplin db dump
+      file:
+        path: "{{backup_dir}}/joplin-{{archive_tag}}.sql"
+        state: touch
+      tags:
+        -psql-dump-prep
+    - name: Dump a database in a docker container
+      community.docker.docker_container_exec:
+        container: joplin-db
+        argv:
+          - pg_dump
+          - --dbname=joplin
+          - --username=joplin
+          - --file=/tmp/joplin-{{archive_tag}}.sql
+      tags:
+        - psql-dump
+    - name: Copy dump to host
+      shell: docker cp joplin-db:/tmp/joplin-{{archive_tag}}.sql {{backup_dir}}
+      tags:
+        - docker-to-host
+    - name: Copy to DO
+      with_fileglob: "{{backup_dir}}/*"
+      amazon.aws.aws_s3:
+        aws_access_key: "{{ lookup('env','DO_ACCESS_KEY') }}"
+        aws_secret_key: "{{ lookup('env','DO_SECRET_KEY') }}"
+        s3_url: "https://sfo3.digitaloceanspaces.com"
+        region: sfo3
+        bucket: "camille-space"
+        object: "/jupiter/{{archive_tag}}/{{item | basename}}"
+        src: "{{item}}"
+        mode: put
+        overwrite: no
+      notify: Notify me
+      tags:
+        - copy-to-do
+  handlers:
+    - name: Notify me
+      community.general.pushover:
+        app_token: "{{ lookup('env','PUSHOVER_APP_ID') }}"
+        user_key: "{{ lookup('env','PUSHOVER_USER_ID') }}"
+        msg: "Backup via ansible complete"
+        pri: 0
+      delegate_to: localhost

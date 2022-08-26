@@ -1,0 +1,11 @@
+---
+- hosts: pi
+  become: true
+  tasks:
+    - name: Notify me
+      community.general.pushover:
+        app_token: "{{ lookup('env','PUSHOVER_APP_ID') }}"
+        user_key: "{{ lookup('env','PUSHOVER_USER_ID') }}"
+        msg: "From jupiter"
+        pri: 0
+      delegate_to: localhost

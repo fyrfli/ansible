@@ -1,0 +1,32 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Run update
+      apt:
+        update_cache: true
+        autoremove: yes
+        upgrade: safe
+      register: apt_results
+      notify:
+        - Email results
+  handlers:
+    - name: Notify me
+      community.general.pushover:
+        app_token: "{{ lookup('env','PUSHOVER_APP_ID') }}"
+        user_key: " {{ lookup('env','PUSHOVER_USER_ID') }}"
+        msg: "Apt updates & upgrades done"
+        pri: 0
+      delegate_to: localhost
+    - name: Email results
+      mail:
+        host: smtp.mailgun.org
+        port: 587
+        username: postmaster@fyrfli.email
+        password: "{{ lookup('env','EMAIL_PASSWORD') }}"
+        secure: starttls
+        to: camille.frantz@me.com
+        from: postmaster@fyrfli.email
+        subject: "Output from testResults.playbook"
+        body: "{{ apt_results.stdout }}"
+      when: always
