@@ -29,6 +29,7 @@
       tags:
         - file-archives
       loop:  "{{backup_targets}}"
+      register: archive_output
     - name: Touch the target archive file for joplin db dump
       file:
         path: "{{backup_dir}}/joplin-{{archive_tag}}.sql"
@@ -45,10 +46,12 @@
           - --file=/tmp/joplin-{{archive_tag}}.sql
       tags:
         - psql-dump
+      register: dump_output
     - name: Copy dump to host
       shell: docker cp joplin-db:/tmp/joplin-{{archive_tag}}.sql {{backup_dir}}
       tags:
         - docker-to-host
+      register: dockertohost_output
     - name: Copy to DO
       with_fileglob: "{{backup_dir}}/*"
       amazon.aws.aws_s3:
@@ -61,14 +64,23 @@
         src: "{{item}}"
         mode: put
         overwrite: no
-      notify: Notify me
       tags:
         - copy-to-do
+      register: s3copy_output
   handlers:
-    - name: Notify me
+    - name: Pushover notifiy
       community.general.pushover:
         app_token: "{{ lookup('env','PUSHOVER_APP_ID') }}"
         user_key: "{{ lookup('env','PUSHOVER_USER_ID') }}"
         msg: "Backup via ansible complete"
         pri: 0
       delegate_to: localhost
+    - name: Telegram notify
+      community.general.telegram:
+        token: "{{ lookup('env','TELEGRAM_BOT_ID') }}"
+        api_args:
+          chat_id: "{{ lookup('env','MY_TELEGRAM_ID') }}"
+          parse_mode: "markdown"
+          text: "{{ archive_output }} \n {{dump_output}} \n {{dockertohost_output}} \n {{s3copy_output}}"
+          disable_web_page_preview: true
+          disable_notification: true
