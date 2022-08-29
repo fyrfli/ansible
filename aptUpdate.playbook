@@ -1,6 +1,8 @@
 ---
 - hosts: all
   become: true
+  vars_files:
+    vault
   tasks:
     - name: Run update
       apt:
@@ -13,11 +15,10 @@
   handlers:
     - name: Notify me
       community.general.pushover:
-        app_token: "{{ lookup('env','PUSHOVER_APP_ID') }}"
-        user_key: " {{ lookup('env','PUSHOVER_USER_ID') }}"
+        app_token: "{{ vault_pushover_app_id }}"
+        user_key: " {{ vault_pushover_user_id }}"
         msg: "Apt updates & upgrades done"
         pri: 0
-      delegate_to: localhost
     - name: Email results
       mail:
         host: smtp.mailgun.org
@@ -29,4 +30,3 @@
         from: postmaster@fyrfli.email
         subject: "Output from testResults.playbook"
         body: "{{ apt_results.stdout }}"
-      when: always
