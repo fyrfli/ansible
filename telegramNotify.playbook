@@ -1,12 +1,14 @@
 ---
 - hosts: live
+  vars_files:
+    vault
   tasks:
     - name: Send notify to Telegram
       community.general.telegram:
-        token: "{{ lookup('env','TELEGRAM_BOT_ID') }}"
+        token: "{{ vault_telegram_bot_id }}"
         api_args:
-          chat_id: "{{ lookup('env','MY_TELEGRAM_ID') }}"
+          chat_id: "{{ vault_telegram_bot_chat }}"
           parse_mode: "markdown"
-          text: "Hello from anible"
+          text: "{{ansible_facts['distribution']}}"
           disable_web_page_preview: true
           disable_notification: true

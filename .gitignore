@@ -1,3 +1,6 @@
 localhost.facts
 ansible.cfg
 hosts.yml
+vault
+vars
+.pwd
