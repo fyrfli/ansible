@@ -4,71 +4,40 @@
   gather_facts: true
   vars:
     archive_tag: "{{ansible_date_time.date.replace('-','')}}"
-    backup_dir: "/u/backups/{{archive_tag}}_test"
-# Leaving this variable in here just in case I need it later and for reference of how to build a list
+    backup_dir: "/u/backups/{{archive_tag}}"
     backup_targets: 
       - /home/camille
       - /etc
       - /home/docker
       - /u/dockerFiles/volumes
+  vars_files:
+    vault
   tasks:
     - name: Create backup directory
       file:
         path: "{{backup_dir}}"
         state: directory
     - name: Archive files
+      become: true
       archive:
-        path: /home/camille
+        path: "{{item}}"
         exclusion_patterns:
           - '**/*tar.gz'
           - '**/*tgz'
           - '**/*deb'
           - '**/*zip'
-        dest: "{{backup_dir}}/camille-{{archive_tag}}.tgz"
+          - '**/[0-9]*'
+        dest: "{{backup_dir}}/{{item.rsplit('/')[-1]}}-{{archive_tag}}.tgz"
       tags:
-        - camille
-    - name: Archive /home/docker files
-      become: true
-      become_user: root
-      archive:
-        path: /home/docker
-        dest: "{{backup_dir}}/docker-{{archive_tag}}.tgz"
-      tags:
-        - docker-home
-    - name: Archive /etc files
-      become: true
-      archive:
-        path: /etc
-        dest: "{{backup_dir}}/etc-{{archive_tag}}.tgz"
-      tags:
-        - etc
-    - name: Archive /dockerFiles files
-      become: true
-      archive:
-        path: /u/dockerFiles/volumes
-        dest: "{{backup_dir}}/volumes-{{archive_tag}}.tgz"
-      tags:
-        - docker-files
-    - name: Change owner of directory and files
-      become: true
-      changed_when: true
-      file:
-        path: "{{backup_dir}}"
-        owner: "{{ ansible_user_id }}"
-        recurse: yes
-      tags:
-        - chown
-    - name: Dump mySQL databases
-      mysql_db:
-        state: dump
-        name: all
-        target: "{{backup_dir}}/{{ansible_date_time.date.replace('-','')}}/mysqldbs-{{ansible_date_time.date.replace('-','')}}.sql"
-      tags:
-        - mysql-dump
-    - name: Touch the target archive file
+        - file-archives
+      loop:  "{{backup_targets}}"
+      register: archive_output
+    - name: Touch the target archive file for joplin db dump
       file:
         path: "{{backup_dir}}/joplin-{{archive_tag}}.sql"
         state: touch
+      tags:
+        -psql-dump-prep
     - name: Dump a database in a docker container
       community.docker.docker_container_exec:
         container: joplin-db
@@ -77,13 +46,19 @@
           - --dbname=joplin
           - --username=joplin
           - --file=/tmp/joplin-{{archive_tag}}.sql
+      tags:
+        - psql-dump
+      register: dump_output
     - name: Copy dump to host
       shell: docker cp joplin-db:/tmp/joplin-{{archive_tag}}.sql {{backup_dir}}
+      tags:
+        - docker-to-host
+      register: dockertohost_output
     - name: Copy to DO
       with_fileglob: "{{backup_dir}}/*"
       amazon.aws.aws_s3:
-        aws_access_key: "{{ lookup('env','DO_ACCESS_KEY') }}"
-        aws_secret_key: "{{ lookup('env','DO_SECRET_KEY') }}"
+        aws_access_key: "{{ vault_do_access_key }}"
+        aws_secret_key: "{{ vault_do_secret_key }}"
         s3_url: "https://sfo3.digitaloceanspaces.com"
         region: sfo3
         bucket: "camille-space"
@@ -93,11 +68,20 @@
         overwrite: no
       tags:
         - copy-to-do
+      register: s3copy_output
   handlers:
-    - name: Notify me
+    - name: Pushover notifiy
       community.general.pushover:
-        app_token: "{{ lookup('env','PUSHOVER_APP_ID') }}"
-        user_key: "{{ lookup('env','PUSHOVER_USER_ID') }}"
+        app_token: "{{ vault_pushover_app_id }}"
+        user_key: "{{ vault_pushover_user_id }}"
         msg: "Backup via ansible complete"
         pri: 0
-      delegate_to: localhost
+    - name: Telegram notify
+      community.general.telegram:
+        token: "{{ vault_telegram_bot_id }}"
+        api_args:
+          chat_id: "{{ vault_telegram_bot_chat }}"
+          parse_mode: "markdown"
+          text: "{{ archive_output }} \n {{dump_output}} \n {{dockertohost_output}} \n {{s3copy_output}}"
+          disable_web_page_preview: true
+          disable_notification: true

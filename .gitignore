@@ -4,3 +4,4 @@ hosts.yml
 vault
 vars
 .pwd
+default_ansible.cfg
