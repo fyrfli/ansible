@@ -54,6 +54,13 @@
       tags:
         - docker-to-host
       register: dockertohost_output
+    - name: Change ownership of archive directory
+      file:
+        path: "{{backup_dir}}"
+        owner: "{{ansible_user}}"
+        recurse: true
+      tags:
+        - chown
     - name: Copy to DO
       with_fileglob: "{{backup_dir}}/*"
       amazon.aws.aws_s3:
