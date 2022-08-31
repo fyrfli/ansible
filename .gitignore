@@ -5,3 +5,4 @@ vault
 vars
 .pwd
 default_ansible.cfg
+**/*test*

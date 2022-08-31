@@ -29,7 +29,7 @@
           - '**/[0-9]*'
         dest: "{{backup_dir}}/{{item.rsplit('/')[-1]}}-{{archive_tag}}.tgz"
       tags:
-        - file-archives
+        - archiving
       loop:  "{{backup_targets}}"
       register: archive_output
     - name: Touch the target archive file for joplin db dump
@@ -37,7 +37,7 @@
         path: "{{backup_dir}}/joplin-{{archive_tag}}.sql"
         state: touch
       tags:
-        -psql-dump-prep
+        - psql_file
     - name: Dump a database in a docker container
       community.docker.docker_container_exec:
         container: joplin-db
@@ -47,20 +47,21 @@
           - --username=joplin
           - --file=/tmp/joplin-{{archive_tag}}.sql
       tags:
-        - psql-dump
+        - psqlr_dump
       register: dump_output
     - name: Copy dump to host
       shell: docker cp joplin-db:/tmp/joplin-{{archive_tag}}.sql {{backup_dir}}
       tags:
-        - docker-to-host
+        - docker_cp
       register: dockertohost_output
     - name: Change ownership of archive directory
+      become: true
       file:
         path: "{{backup_dir}}"
         owner: "{{ansible_user}}"
         recurse: true
       tags:
-        - chown
+        - chowning
     - name: Copy to DO
       with_fileglob: "{{backup_dir}}/*"
       amazon.aws.aws_s3:
@@ -74,21 +75,16 @@
         mode: put
         overwrite: no
       tags:
-        - copy-to-do
+        - s3copy
       register: s3copy_output
+      notify: Telegram notify
   handlers:
-    - name: Pushover notifiy
-      community.general.pushover:
-        app_token: "{{ vault_pushover_app_id }}"
-        user_key: "{{ vault_pushover_user_id }}"
-        msg: "Backup via ansible complete"
-        pri: 0
     - name: Telegram notify
       community.general.telegram:
         token: "{{ vault_telegram_bot_id }}"
         api_args:
           chat_id: "{{ vault_telegram_bot_chat }}"
-          parse_mode: "markdown"
+          parse_mode: "plain"
           text: "{{ archive_output }} \n {{dump_output}} \n {{dockertohost_output}} \n {{s3copy_output}}"
           disable_web_page_preview: true
           disable_notification: false
