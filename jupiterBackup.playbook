@@ -32,6 +32,7 @@
         - archiving
       loop:  "{{backup_targets}}"
       register: archive_output
+      notify: "notify me"
     - name: Touch the target archive file for joplin db dump
       file:
         path: "{{backup_dir}}/joplin-{{archive_tag}}.sql"
@@ -49,11 +50,13 @@
       tags:
         - psqlr_dump
       register: dump_output
+      notify: "notify me"
     - name: Copy dump to host
       shell: docker cp joplin-db:/tmp/joplin-{{archive_tag}}.sql {{backup_dir}}
       tags:
         - docker_cp
       register: dockertohost_output
+      notify: "notify me"
     - name: Change ownership of archive directory
       become: true
       file:
@@ -77,7 +80,7 @@
       tags:
         - s3copy
       register: s3copy_output
-      notify: Telegram notify
+      notify: "notify me"
   handlers:
     - name: Telegram notify
       community.general.telegram:
@@ -88,3 +91,4 @@
           text: "{{ archive_output }} \n {{dump_output}} \n {{dockertohost_output}} \n {{s3copy_output}}"
           disable_web_page_preview: true
           disable_notification: false
+      listen: "notify me"
