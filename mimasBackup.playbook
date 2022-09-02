@@ -72,12 +72,89 @@
 
   handlers:
     - name: Telegram notify
-      community.general.telegram:
-        token: "{{vault_telegram_bot_id}}"
-        api_args:
-          chat_id: "{{vault_telegram_bot_chat}}"
-          parse_mode: "plain"
-          text: "Backup complete. \n {{archive_output}} \n {{s3copy_output}}"
-          disable_web_page_preview: true
-          disable_notifications: false
+      community.general.pushover:
+        app_token: "{{ vault_pushover_app_id }}"
+        user_key: "{{ vault_pushover_user_id }}"
+        msg: "Backup completed for mimas {{ansible_date_time.date}}"
+        pri: 0
+      listen: "notify me"
+---
+- name: Backup mimas
+  hosts: mimas
+  vars:
+    archive_tag: "{{ansible_date_time.date.replace('-','')}}"
+    backup_dir: "/var/ansible/data/{{archive_tag}}"
+    backup_targets:
+      - /home/camille
+      - /etc
+  vars_files:
+    vault
+
+  tasks:
+    - name: Create backup dir
+      become: true
+      file:
+        path: "{{backup_dir}}"
+        state: directory
+      tags:
+        - mk_dir
+
+    - name: Archive files
+      become: true
+      archive:
+        path: "{{item}}"
+        exclusion_patterns:
+          - '**/*tar.gz'
+          - '**/*tgz'
+          - '**/*deb'
+          - '**/*zip'
+          - '**/*tar'
+        dest: "{{backup_dir}}/{{item.rsplit('/')[-1]}}-{{archive_tag}}.tgz"
+      loop: "{{backup_targets}}"
+      tags:
+        - archiving
+      register: archive_output
+      notify: "notify me"
+
+    - name: Change ownership of archive directory
+      become: true
+      file:
+        path: "{{backup_dir}}"
+        owner: "{{ansible_user}}"
+        recurse: true
+      tags:
+        - chowning
+
+    - name: Get list of files
+      find:
+        path: "{{backup_dir}}"
+        patterns: "*"
+      register: file_list
+      tags:
+        - finding
+
+    - name: Copy to DO
+      amazon.aws.aws_s3:
+        aws_access_key: "{{vault_do_access_key}}"
+        aws_secret_key: "{{vault_do_secret_key}}"
+        s3_url: "https://sfo3.digitaloceanspaces.com"
+        region: sfo3
+        bucket: "camille-space"
+        object: "/mimas/{{archive_tag}}/{{item.path | basename}}"
+        src: "{{item.path}}"
+        mode: put
+        overwrite: no
+      with_items: "{{file_list.files}}"
+      tags:
+        - s3copying
+      register: s3copy_output
+      notify: "notify me"
+
+  handlers:
+    - name: Notify me
+      community.general.pushover:
+        app_token: "{{ vault_pushover_app_id }}"
+        user_key: "{{ vault_pushover_user_id }}"
+        msg: "Backup completed for jupiter {{ansible_date_time.date}}"
+        pri: 0
       listen: "notify me"

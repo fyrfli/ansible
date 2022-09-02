@@ -1,0 +1,30 @@
+---
+- name: Finding and removing old files
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    vault
+  tasks:
+    - name: Find the files older than 10 days
+      become: true
+      ansible.builtin.find:
+        path: /u/backups/
+        age: 10d
+        recurse: true
+      register: file_list
+    - name: Delete old files
+      become: true
+      file:
+        path: "{{item}}"
+        state: absent
+      with_items: "{{file_list.files}}"
+      notify: "send notification"
+
+  handlers:
+    - name: Send Notification
+      community.general.pushover:
+        app_token: "{{ vault_pushover_app_id }}"
+        user_key: "{{ vault_pushover_user_id }}"
+        msg: "Deleted files older than 10 days"
+        pri: 0
+      listen: "send notification"
