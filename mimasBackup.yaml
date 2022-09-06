@@ -58,9 +58,9 @@
       amazon.aws.aws_s3:
         aws_access_key: "{{ vault_do_access_key }}"
         aws_secret_key: "{{ vault_do_secret_key }}"
-        s3_url: '{{ s3_url }}'
-        region: '{{ s3_region }}'
-        bucket: '{{ s3_bucket }}'
+        s3_url: '{{ vault_s3_url }}'
+        region: '{{ vault_s3_region }}'
+        bucket: '{{ vault_s3_bucket }}'
         object: "/mimas/{{ archive_tag }}/{{ item.path | basename }}"
         src: "{{ item.path }}"
         mode: put

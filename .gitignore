@@ -7,3 +7,4 @@ hosts.yml
 example_ansible.cfg
 **/*test*
 **/*playbook
+old-playbooks
