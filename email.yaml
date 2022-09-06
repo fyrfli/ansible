@@ -1,0 +1,13 @@
+---
+  - name: Email results
+    community.general.mail:
+      host: smtp.mailgun.org
+      port: 587
+      username: postmaster@fyrfli.email
+      password: "{{ vault_email_password }}"
+      secure: starttls
+      to: camille.frantz@me.com
+      from: postmaster@fyrfli.email
+      subject: " {{ msg_title }} "
+      body: "{{ msg_text }}"
+    delegate_to: localhost

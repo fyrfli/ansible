@@ -1,9 +1,11 @@
 ---
 - name: Finding and removing old files
-  hosts: localhost
+  hosts: jupiter
   gather_facts: false
   vars_files:
-    vault
+    - .vault
+  vars:
+    - msg_title: "Deleted files older than 10 days"
   tasks:
     - name: Find the files older than 10 days
       become: true
@@ -11,20 +13,22 @@
         path: /u/backups/
         age: 10d
         recurse: true
-      register: file_list
+      register: msg_text
     - name: Delete old files
       become: true
-      file:
-        path: "{{item}}"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
         state: absent
-      with_items: "{{file_list.files}}"
-      notify: "send notification"
+      with_items: "{{  msg_text.files  }}"
+      delegate_to: "{{  ansible_host  }}"
+      notify: 
+        - Push over
 
   handlers:
-    - name: Send Notification
+    - name: Push over
       community.general.pushover:
         app_token: "{{ vault_pushover_app_id }}"
         user_key: "{{ vault_pushover_user_id }}"
-        msg: "Deleted files older than 10 days"
+        msg: "{{ msg_title }}"
         pri: 0
-      listen: "send notification"
+      delegate_to: localhost

@@ -1,0 +1,6 @@
+---
+- name: Dump MySQL databases on host
+  community.mysql.mysql_db:
+    state: dump
+    name: all
+    target: '{{ backup_dir }}/{{ archive_tag }}/mysql-{{ archive_tag }}.sql'

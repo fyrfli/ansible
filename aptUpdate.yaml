@@ -2,31 +2,36 @@
 - hosts: all
   become: true
   vars_files:
-    vault
+    - .vault
+  vars:
+    - msg_title: "Apt updates & upgrades done"
   tasks:
     - name: Run update
-      apt:
+      ansible.builtin.apt:
         update_cache: true
         autoremove: yes
         upgrade: safe
-      register: apt_results
+      register: msg_text
       notify:
+        - Push over
         - Email results
   handlers:
-    - name: Notify me
+    - name: Push over
       community.general.pushover:
         app_token: "{{ vault_pushover_app_id }}"
-        user_key: " {{ vault_pushover_user_id }}"
-        msg: "Apt updates & upgrades done"
+        user_key: "{{ vault_pushover_user_id }}"
+        msg: "{{ msg_title }}"
         pri: 0
+      delegate_to: localhost
     - name: Email results
-      mail:
+      community.general.mail:
         host: smtp.mailgun.org
         port: 587
         username: postmaster@fyrfli.email
-        password: "{{ lookup('env','EMAIL_PASSWORD') }}"
+        password: "{{ vault_email_password }}"
         secure: starttls
         to: camille.frantz@me.com
         from: postmaster@fyrfli.email
         subject: "Output from testResults.playbook"
-        body: "{{ apt_results.stdout }}"
+        body: "{{ msg_text }}"
+      delegate_to: localhost

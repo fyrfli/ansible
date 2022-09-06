@@ -1,0 +1,11 @@
+---
+  - name: Telegram send
+    community.general.telegram:
+      token: "{{ vault_telegram_bot_id }}"
+      api_args:
+        chat_id: "{{ vault_telegram_bot_chat }}"
+        parse_mode: "plain"
+        text: "{{ msg_text }}"
+        disable_web_page_preview: true
+        disable_notification: false
+    delegate_to: localhost

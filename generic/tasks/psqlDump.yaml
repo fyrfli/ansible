@@ -1,0 +1,6 @@
+---
+- name: Dump Postgresql databases on host
+  community.postgresql.postgresql_db:
+    state: dump
+    name: all
+    target: '{{ backup_dir }}/{{ archive_tag }}/psql-{{ archive_tag }}.sql'

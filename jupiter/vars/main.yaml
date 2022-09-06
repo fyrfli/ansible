@@ -1,0 +1,10 @@
+---
+vars:
+  backup_targets:
+    - /home/camille
+    - /etc
+    - /home/camille/docker
+    - /u/dockerFiles/volumes/portainer_data
+    - /u/dockerFiles/unifi-data
+  s3_dest:
+    - /jupiter

@@ -1,13 +1,9 @@
 ---
-- hosts: pi
-  become: true
-  vars_files:
-    vault
   tasks:
-    - name: Notify me
+    - name: Push over
       community.general.pushover:
         app_token: "{{ vault_pushover_app_id }}"
         user_key: "{{ vault_pushover_user_id }}"
-        msg: "From jupiter"
+        msg: "{{ msg_text }}"
         pri: 0
       delegate_to: localhost

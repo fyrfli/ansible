@@ -1,0 +1,23 @@
+---
+- name: Reboot all servers
+  hosts: all
+  vars_files:
+    - .vault
+  become: true
+  tasks:
+    - name: Reboot all servers
+      ansible.builtin.reboot:
+        reboot_command: shutdown -r now
+        test_command: whoami
+      register: reboot_output
+      notify: 
+        - Push over
+  handlers:
+    - name: Push over
+      community.general.pushover:
+        app_token: "{{ vault_pushover_app_id }}"
+        user_key: " {{ vault_pushover_user_id }}"
+        msg: "Reboots complete"
+        pri: 0
+      listen: "notify me"
+
