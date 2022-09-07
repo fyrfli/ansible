@@ -20,6 +20,7 @@
         state: directory
       tags:
         - make_dir
+
     - name: Archive files
       become: true
       community.general.archive:
@@ -29,7 +30,6 @@
           - '**/*tgz'
           - '**/*deb'
           - '**/*zip'
-          - '**/[0-9]*'
           - '**/*vagrant*'
           - '**/*VirtualBox*'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
@@ -39,12 +39,14 @@
       register: archive_output
       notify:
         - Push over
+
     - name: Touch the target archive file for joplin db dump
       ansible.builtin.file:
         path: "{{ backup_dir }}/joplin-{{ archive_tag }}.sql"
         state: touch
       tags:
         - psql_file
+
     - name: Dump a database in a docker container
       community.docker.docker_container_exec:
         container: joplin-db
@@ -58,6 +60,7 @@
       register: dump_output
       notify:
         - Push over
+
     - name: Copy dump to host
       ansible.builtin.shell: docker cp joplin-db:/tmp/joplin-{{ archive_tag }}.sql {{ backup_dir }}
       register: dockertohost_output
@@ -65,15 +68,17 @@
         - docker_cp
       notify:
         - Push over
+
     - name: Dump MySQL databases on host
       community.mysql.mysql_db:
         login_user: '{{ vault_mysql_user }}'
         login_password: '{{ vault_mysql_password }}'
         state: dump
         name: all
-        target: '{{ backup_dir }}/{{ archive_tag }}/mysql-{{ archive_tag }}.sql'
-        tags:
-          - mysql_dump
+        target: '{{ backup_dir }}//mysql-{{ archive_tag }}.sql'
+      tags:
+        - mysql_dump
+
     - name: Change ownership of archive directory
       become: true
       ansible.builtin.file:
@@ -82,6 +87,7 @@
         recurse: true
       tags:
         - chowning
+
     - name: Copy to DO
       with_fileglob: "{{ backup_dir }}/*"
       amazon.aws.aws_s3:
@@ -99,6 +105,7 @@
       register: s3copy_output
       notify:
         - Push over
+
   handlers:
     - name: Push over
       community.general.pushover:
