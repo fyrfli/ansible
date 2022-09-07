@@ -7,7 +7,7 @@
     backup_targets:
       - /etc
       - /home/camille
-#      - /etc/nginx/conf.d/
+      - /etc/nginx/conf.d/
 #      - /home/www
   vars_files:
     - .vault
@@ -39,6 +39,22 @@
       register: archive_output
       notify: 
         - Push over
+
+    - name: Dump YOURLS database
+      community.docker.docker_container_exec:
+        container: urls-db
+        argv:
+          - mysqldump
+          - --password="{{ vault_urls_db_root_password }}"
+          - yourls
+          - --result-file=/tmp/yourls.sql
+        tags:
+          - yourls_db_dump
+
+    - name: Copy YOURLS database dump to host
+      ansible.builtin.shell: "docker cp urls-db:/tmp/yourls.sql {{ backup_dir }}/yourls-{{ archive_tag }}.sql"
+      tags:
+        - docker_cp
 
     - name: Change ownership of archive directory
       become: true
