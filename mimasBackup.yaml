@@ -1,14 +1,11 @@
 ---
 - name: Backup mimas
   hosts: mimas
-  vars:
-    archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "/var/ansible/data/{{ archive_tag }}"
-    backup_targets:
-      - /home/camille
-      - /etc
   vars_files:
     - .vault
+  vars:
+    archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
+    backup_dir: "{{ vault_mimas_backup_dest }}/{{ archive_tag }}"
 
   tasks:
     - name: Create backup dir
@@ -30,7 +27,7 @@
           - '**/*zip'
           - '**/*tar'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
-      loop: "{{ backup_targets }}"
+      loop: "{{ vault_mimas_backup_targets }}"
       tags:
         - archiving
       register: archive_output
@@ -61,7 +58,7 @@
         s3_url: '{{ vault_s3_url }}'
         region: '{{ vault_s3_region }}'
         bucket: '{{ vault_s3_bucket }}'
-        object: "/mimas/{{ archive_tag }}/{{ item.path | basename }}"
+        object: "{{ vault_mimas_s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
         src: "{{ item.path }}"
         mode: put
         overwrite: no
