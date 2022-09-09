@@ -32,6 +32,6 @@
         secure: starttls
         to: camille.frantz@me.com
         from: postmaster@fyrfli.email
-        subject: "Output from testResults.playbook"
+        subject: "Output from apt update ansible run"
         body: "{{ msg_text }}"
       delegate_to: localhost

@@ -1,3 +1,0 @@
----
-vars:
-  - archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
