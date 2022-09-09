@@ -2,17 +2,11 @@
 - name: Backup jupiter
   hosts: jupiter
   gather_facts: true
-  vars:
-    archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "/u/backups/{{ archive_tag }}"
-    backup_targets: 
-      - /home/camille
-      - /etc
-      - /home/camille/docker
-      - /u/dockerFiles/volumes/portainer_data
-      - /u/dockerFiles/unifi-data
   vars_files:
     - .vault
+  vars:
+    archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
+    backup_dir: "{{ vault_jupiter_backup_dest }}/{{ archive_tag }}"
   tasks:
     - name: Create backup directory
       ansible.builtin.file:
@@ -35,7 +29,7 @@
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
       tags:
         - archiving
-      loop:  "{{ backup_targets }}"
+      loop:  "{{ vault_jupiter_backup_targets }}"
       register: archive_output
       notify:
         - Push over
@@ -96,7 +90,7 @@
         s3_url: "{{ vault_s3_url }}"
         region: "{{ vault_s3_region }}"
         bucket: "{{ vault_s3_bucket }}"
-        object: "/jupiter/{{ archive_tag }}/{{ item | basename }}"
+        object: "{{ vault_jupiter_s3_dest }}/{{ archive_tag }}/{{ item | basename }}"
         src: "{{ item }}"
         mode: put
         overwrite: no
@@ -113,3 +107,4 @@
         user_key: "{{ vault_pushover_user_id }}"
         msg: "Backup completed for jupiter {{ ansible_date_time.date }}"
         pri: 0
+      delegate_to: localhost
