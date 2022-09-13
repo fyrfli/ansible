@@ -26,6 +26,7 @@
           - '**/*zip'
           - '**/*vagrant*'
           - '**/*VirtualBox*'
+          - '**/*iso'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
       tags:
         - archiving

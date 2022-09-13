@@ -26,6 +26,7 @@
           - '**/*deb'
           - '**/*zip'
           - '**/*tar'
+          - '**/*iso'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
       loop: "{{ vault_mimas_backup_targets }}"
       tags:
