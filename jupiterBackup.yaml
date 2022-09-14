@@ -1,12 +1,12 @@
 ---
 - name: Backup jupiter
   hosts: jupiter
-  gather_facts: true
   vars_files:
     - .vault
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
     backup_dir: "{{ vault_jupiter_backup_dest }}/{{ archive_tag }}"
+
   tasks:
     - name: Create backup directory
       ansible.builtin.file:

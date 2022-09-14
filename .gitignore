@@ -1,9 +1,8 @@
 localhost.facts
 ansible.cfg
 hosts.yml
-.vault
-.vars
 .pwd
+.vars
 example_ansible.cfg
 **/*test*
 **/*playbook

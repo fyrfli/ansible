@@ -5,7 +5,7 @@
     - .vault
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "{{ vault_do_backup_dest }}{{ archive_tag }}"
+    backup_dir: "{{ vault_do_backup_dest }}/{{ archive_tag }}"
 
   tasks:
     - name: Create backup dir
@@ -14,7 +14,7 @@
         path: "{{ backup_dir }}"
         state: directory
       tags:
-        - mk_dir
+        - make_dir
 
     - name: Archive files
       become: true
@@ -62,15 +62,8 @@
       tags:
         - chowning
 
-    - name: Get list of files
-      ansible.builtin.find:
-        path: "{{ backup_dir }}"
-        patterns: "*"
-      register: file_list
-      tags:
-        - finding
-
     - name: Copy to DO
+      with_fileglob: "{{ backup_dir }}/*"
       amazon.aws.aws_s3:
         aws_access_key: "{{ vault_do_access_key }}"
         aws_secret_key: "{{ vault_do_secret_key }}"
@@ -81,9 +74,8 @@
         src: "{{ item.path }}"
         mode: put
         overwrite: no
-      with_items: "{{ file_list.files }}"
       tags:
-        - s3copying
+        - s3copy
       register: s3copy_output
       notify:
         - Push over
