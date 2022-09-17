@@ -15,8 +15,8 @@
   handlers:
     - name: Push over
       community.general.pushover:
-        app_token: "{{ vault_pushover_app_id }}"
-        user_key: " {{ vault_pushover_user_id }}"
+        app_token: "{{ pushover_app_id }}"
+        user_key: " {{ pushover_user_id }}"
         msg: "Reboots complete"
         pri: 0
       listen: "notify me"

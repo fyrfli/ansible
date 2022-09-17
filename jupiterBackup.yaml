@@ -5,7 +5,7 @@
     - .vault
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "{{ vault_jupiter_backup_dest }}/{{ archive_tag }}"
+    backup_dir: "{{ jupiter_backup_dest }}/{{ archive_tag }}"
 
   tasks:
     - name: Create backup directory
@@ -30,7 +30,7 @@
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
       tags:
         - archiving
-      loop:  "{{ vault_jupiter_backup_targets }}"
+      loop:  "{{ jupiter_backup_targets }}"
       register: archive_output
       notify:
         - Push over
@@ -66,8 +66,8 @@
 
     - name: Dump MySQL databases on host
       community.mysql.mysql_db:
-        login_user: '{{ vault_mysql_user }}'
-        login_password: '{{ vault_mysql_password }}'
+        login_user: '{{ jupiter_mysql_user }}'
+        login_password: '{{ jupiter_mysql_password }}'
         state: dump
         name: all
         target: '{{ backup_dir }}//mysql-{{ archive_tag }}.sql'
@@ -86,12 +86,12 @@
     - name: Copy to DO
       with_fileglob: "{{ backup_dir }}/*"
       amazon.aws.aws_s3:
-        aws_access_key: "{{ vault_do_access_key }}"
-        aws_secret_key: "{{ vault_do_secret_key }}"
-        s3_url: "{{ vault_s3_url }}"
-        region: "{{ vault_s3_region }}"
-        bucket: "{{ vault_s3_bucket }}"
-        object: "{{ vault_jupiter_s3_dest }}/{{ archive_tag }}/{{ item | basename }}"
+        aws_access_key: "{{ do_access_key }}"
+        aws_secret_key: "{{ do_secret_key }}"
+        s3_url: "{{ s3_url }}"
+        region: "{{ s3_region }}"
+        bucket: "{{ s3_bucket }}"
+        object: "{{ jupiter_s3_dest }}/{{ archive_tag }}/{{ item | basename }}"
         src: "{{ item }}"
         mode: put
         overwrite: no
@@ -104,8 +104,8 @@
   handlers:
     - name: Push over
       community.general.pushover:
-        app_token: "{{ vault_pushover_app_id }}"
-        user_key: "{{ vault_pushover_user_id }}"
+        app_token: "{{ pushover_app_id }}"
+        user_key: "{{ pushover_user_id }}"
         msg: "Backup completed for jupiter {{ ansible_date_time.date }}"
         pri: 0
       delegate_to: localhost

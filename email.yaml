@@ -4,7 +4,7 @@
       host: smtp.mailgun.org
       port: 587
       username: postmaster@fyrfli.email
-      password: "{{ vault_email_password }}"
+      password: "{{ email_password }}"
       secure: starttls
       to: camille.frantz@me.com
       from: postmaster@fyrfli.email

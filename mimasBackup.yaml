@@ -5,7 +5,7 @@
     - .vault
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "{{ vault_mimas_backup_dest }}/{{ archive_tag }}"
+    backup_dir: "{{ mimas_backup_dest }}/{{ archive_tag }}"
 
   tasks:
     - name: Create backup dir
@@ -28,7 +28,7 @@
           - '**/*tar'
           - '**/*iso'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
-      loop: "{{ vault_mimas_backup_targets }}"
+      loop: "{{ mimas_backup_targets }}"
       tags:
         - archiving
       register: archive_output
@@ -54,12 +54,12 @@
 
     - name: Copy to DO
       amazon.aws.aws_s3:
-        aws_access_key: "{{ vault_do_access_key }}"
-        aws_secret_key: "{{ vault_do_secret_key }}"
-        s3_url: '{{ vault_s3_url }}'
-        region: '{{ vault_s3_region }}'
-        bucket: '{{ vault_s3_bucket }}'
-        object: "{{ vault_mimas_s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
+        aws_access_key: "{{ do_access_key }}"
+        aws_secret_key: "{{ do_secret_key }}"
+        s3_url: '{{ s3_url }}'
+        region: '{{ s3_region }}'
+        bucket: '{{ s3_bucket }}'
+        object: "{{ mimas_s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
         src: "{{ item.path }}"
         mode: put
         overwrite: no
@@ -73,8 +73,8 @@
   handlers:
     - name: Push over
       community.general.pushover:
-        app_token: "{{ vault_pushover_app_id }}"
-        user_key: "{{ vault_pushover_user_id }}"
+        app_token: "{{ pushover_app_id }}"
+        user_key: "{{ pushover_user_id }}"
         msg: "Backup completed for mimas {{ ansible_date_time.date }}"
         pri: 0
       delegate_to: localhost

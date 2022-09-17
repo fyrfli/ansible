@@ -5,7 +5,7 @@
     - .vault
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "{{ vault_do_backup_dest }}/{{ archive_tag }}"
+    backup_dir: "{{ do_backup_dest }}/{{ archive_tag }}"
 
   tasks:
     - name: Create backup dir
@@ -29,7 +29,7 @@
           - '**/*misskey*'
           - '**/*iso'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
-      loop: "{{ vault_do_backup_targets }}"
+      loop: "{{ do_backup_targets }}"
       tags:
         - archiving
       register: archive_output
@@ -41,7 +41,7 @@
         container: urls-db
         argv:
           - "mysqldump"
-          - "--password={{ vault_urls_db_root_password }}"
+          - "--password={{ urls_db_root_password }}"
           - "yourls"
           - "--result-file=/tmp/yourls.sql"
       tags:
@@ -62,18 +62,26 @@
       tags:
         - chowning
 
+    - name: Get list of files
+      ansible.builtin.find:
+        path: "{{ backup_dir }}"
+        patterns: "*"
+      register: file_list
+      tags:
+        - finding
+
     - name: Copy to DO
-      with_fileglob: "{{ backup_dir }}/*"
       amazon.aws.aws_s3:
-        aws_access_key: "{{ vault_do_access_key }}"
-        aws_secret_key: "{{ vault_do_secret_key }}"
-        s3_url: '{{ vault_s3_url }}'
-        region: '{{ vault_s3_region }}'
-        bucket: '{{ vault_s3_bucket }}'
-        object: "{{ vault_do_s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
+        aws_access_key: "{{ do_access_key }}"
+        aws_secret_key: "{{ do_secret_key }}"
+        s3_url: '{{ s3_url }}'
+        region: '{{ s3_region }}'
+        bucket: '{{ s3_bucket }}'
+        object: "{{ do_s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
         src: "{{ item.path }}"
         mode: put
         overwrite: no
+      with_items: "{{ file_list.files }}"
       tags:
         - s3copy
       register: s3copy_output
@@ -83,7 +91,7 @@
   handlers:
     - name: Push over
       community.general.pushover:
-        app_token: "{{ vault_pushover_app_id }}"
-        user_key: "{{ vault_pushover_user_id }}"
+        app_token: "{{ pushover_app_id }}"
+        user_key: "{{ pushover_user_id }}"
         msg: "Backup completed for DO {{ ansible_date_time.date }}"
         pri: 0
