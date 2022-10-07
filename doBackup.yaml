@@ -1,11 +1,11 @@
 ---
 - name: Backup do
-  hosts: live
+  hosts: do
   vars_files:
     - .vault
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
-    backup_dir: "{{ do_backup_dest }}/{{ archive_tag }}"
+    backup_dir: "{{ backup_dest }}/{{ archive_tag }}"
 
   tasks:
     - name: Create backup dir
@@ -29,39 +29,23 @@
           - '**/*misskey*'
           - '**/*iso'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
-      loop: "{{ do_backup_targets }}"
+      loop: "{{ backup_targets }}"
       tags:
         - archiving
       register: archive_output
       notify: 
         - Push over
 
-    - name: Dump YOURLS database
-      community.docker.docker_container_exec:
-        container: urls-db
-        argv:
-          - "mysqldump"
-          - "--password={{ urls_db_root_password }}"
-          - "yourls"
-          - "--result-file=/tmp/yourls.sql"
-      tags:
-        - yourls_db_dump
-
     - name: Dump MySQL databases on host
+      become: true
       community.mysql.mysql_db:
-        login_user: '{{ do_mysql_user }}'
-        login_password: '{{ do_mysql_password }}'
+        login_user: '{{ mysql_user }}'
+        login_password: '{{ mysql_password }}'
         state: dump
         name: all
         target: '{{ backup_dir }}//allmysql-{{ archive_tag }}.sql'
       tags:
         - mysql_dump
-
-    - name: Copy YOURLS database dump to host
-      become: true
-      ansible.builtin.shell: "docker cp urls-db:/tmp/yourls.sql {{ backup_dir }}/yourls-{{ archive_tag }}.sql"
-      tags:
-        - docker_cp
 
     - name: Change ownership of archive directory
       become: true
@@ -87,7 +71,7 @@
         s3_url: '{{ s3_url }}'
         region: '{{ s3_region }}'
         bucket: '{{ s3_bucket }}'
-        object: "{{ do_s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
+        object: "{{ s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
         src: "{{ item.path }}"
         mode: put
         overwrite: no
@@ -95,8 +79,14 @@
       tags:
         - s3copy
       register: s3copy_output
+      #delegate_to: '{{ ansible_host }}'
       notify:
         - Push over
+
+    - name: Remove backup directory to save space
+      ansible.builtin.file:
+        path: '{{ backup_dir }}'
+        state: absent
 
   handlers:
     - name: Push over

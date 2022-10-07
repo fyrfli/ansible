@@ -1,6 +1,8 @@
 ---
 - name: Dump Postgresql databases on host
   community.postgresql.postgresql_db:
+    login_host: 127.0.0.1
+    port: 5433
     state: dump
-    name: all
-    target: '{{ backup_dir }}/{{ archive_tag }}/psql-{{ archive_tag }}.sql'
+    name: '{{ psql_db }}'
+    target: '{{ backup_dir }}/{{ psql_db }}-{{ archive_tag }}.sql'

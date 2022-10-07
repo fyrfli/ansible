@@ -1,9 +1,8 @@
 ---
-  tasks:
-    - name: Push over
-      community.general.pushover:
-        app_token: "{{ pushover_app_id }}"
-        user_key: "{{ pushover_user_id }}"
-        msg: "{{ msg_text }}"
-        pri: 0
-      delegate_to: localhost
+- name: Pushover
+  community.general.pushover:
+    app_token: "{{ pushover_app_id }}"
+    user_key: "{{ pushover_user_id }}"
+    msg: "{{ msg_text }}"
+    pri: 0
+  delegate_to: localhost

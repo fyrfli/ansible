@@ -7,3 +7,4 @@ example_ansible.cfg
 **/*test*
 **/*playbook
 old-playbooks
+.do-creds

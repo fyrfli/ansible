@@ -70,6 +70,11 @@
       notify:
         - Push over
 
+    - name: Remove backup directory to save space
+      ansible.builtin.file:
+        path: '{{ backup_dir }}'
+        state: absent
+
   handlers:
     - name: Push over
       community.general.pushover:

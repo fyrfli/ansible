@@ -11,5 +11,5 @@
       - '**/*vagrant*'
       - '**/*VirtualBox*'
     dest: '{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz'
-    loop: ' {{ backup_targets }}'
+    loop: '{{ backup_targets }}'
 

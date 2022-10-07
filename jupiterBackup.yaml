@@ -6,6 +6,7 @@
   vars:
     archive_tag: "{{ ansible_date_time.date.replace('-','') }}"
     backup_dir: "{{ jupiter_backup_dest }}/{{ archive_tag }}"
+    psql_db: "semaphore"
 
   tasks:
     - name: Create backup directory
@@ -63,6 +64,8 @@
         - docker_cp
       notify:
         - Push over
+
+          #- include_tasks: psqlDump.yaml
 
     - name: Dump MySQL databases on host
       community.mysql.mysql_db:

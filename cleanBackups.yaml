@@ -4,8 +4,6 @@
   gather_facts: false
   vars_files:
     - .vault
-  vars:
-    - msg_title: "Deleted files older than 10 days"
   tasks:
     - name: Find the files older than 10 days
       become: true
@@ -13,14 +11,25 @@
         path: /u/backups/
         age: 10d
         recurse: true
-      register: msg_text
+      register: file_list
+    - name: Find directories older than 10 days
+      ansible.builtin.find:
+        path: /u/backups/
+        age: 10d
+        file_type: directory
+      register: dir_list
     - name: Delete old files
       become: true
       ansible.builtin.file:
         path: "{{ item.path }}"
         state: absent
-      with_items: "{{  msg_text.files  }}"
-      delegate_to: "{{  ansible_host  }}"
+      with_items: "{{ file_list.files }}"
+      delegate_to: "{{ ansible_host }}"
+    - name: Delete the old directories too
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ dir_list.files }}"
       notify: 
         - Push over
 
@@ -29,6 +38,6 @@
       community.general.pushover:
         app_token: "{{ pushover_app_id }}"
         user_key: "{{ pushover_user_id }}"
-        msg: "{{ msg_title }}"
+        msg: "Delete old backup files and directories - complete"
         pri: 0
       delegate_to: localhost
