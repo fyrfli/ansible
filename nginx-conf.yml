@@ -1,0 +1,24 @@
+---
+- name: Create a new nginx config
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Show me the money
+      ansible.builtin.debug:
+        msg: "Server name: {{ server_name }} and the short name is: {{ server_short }} to be proxy'd to {{ host_ip  }}:{{ host_port }}"
+    - name: Create file from template in /etc/nginx/conf.d
+      ansible.builtin.template:
+        backup: yes
+        dest: /etc/nginx/conf.d/{{ server_short  }}.conf
+        src: /home/camille/ansible/nginx-host.conf
+    - name: Restart nginx after creating the new config file
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
+    - name: Get a certification for the domain
+      ansible.builtin.command:
+        cmd: certbot --nginx -d {{ server_name }}
+    - name: Restart nginx after installing certification
+      ansible.builtin.systemd:
+        name: nginx
+        state: reloaded
