@@ -11,10 +11,6 @@
         update_cache: true
         autoremove: yes
         upgrade: safe
-      register: msg_text
-      notify:
-        - Push over
-        - Email results
   handlers:
     - name: Push over
       community.general.pushover:
@@ -22,16 +18,4 @@
         user_key: "{{ pushover_user_id }}"
         msg: "{{ msg_title }}"
         pri: 0
-      delegate_to: localhost
-    - name: Email results
-      community.general.mail:
-        host: smtp.mailgun.org
-        port: 587
-        username: postmaster@fyrfli.email
-        password: "{{ email_password }}"
-        secure: starttls
-        to: camille.frantz@me.com
-        from: postmaster@fyrfli.email
-        subject: "Output from apt update ansible run"
-        body: "{{ msg_text }}"
       delegate_to: localhost
