@@ -71,15 +71,15 @@
         s3_url: '{{ s3_url }}'
         region: '{{ s3_region }}'
         bucket: '{{ s3_bucket }}'
-        object: "{{ s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
+        object: "{{ s3_dest }}/{{ archive_tag }}/{{ item | basename }}"
         src: "{{ item.path }}"
         mode: put
         overwrite: no
-      with_items: "{{ file_list.files }}"
+        #loop: "{{ lookup('fileglob', '{{ backup_dir }}/*',wantlist=true) }}"
+      loop: "{{ file_list.files }}"
       tags:
         - s3copy
       register: s3copy_output
-      #delegate_to: '{{ ansible_host }}'
       notify:
         - Push over
 

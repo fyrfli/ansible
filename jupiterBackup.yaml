@@ -28,6 +28,9 @@
           - '**/*vagrant*'
           - '**/*VirtualBox*'
           - '**/*iso'
+          - '**/retool*'
+          - '**/.vagrant*'
+          - '**/*cache*'
         dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
       tags:
         - archiving
@@ -87,7 +90,7 @@
         - chowning
 
     - name: Copy to DO
-      with_fileglob: "{{ backup_dir }}/*"
+      loop: "{{ lookup('fileglob', '{{ backup_dir }}/*',wantlist=true) }}"
       amazon.aws.aws_s3:
         aws_access_key: "{{ do_access_key }}"
         aws_secret_key: "{{ do_secret_key }}"
