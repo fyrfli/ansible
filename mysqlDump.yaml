@@ -4,3 +4,4 @@
     state: dump
     name: all
     target: '{{ backup_dir }}/{{ archive_tag }}/mysql-{{ archive_tag }}.sql'
+    when: full_db_backup

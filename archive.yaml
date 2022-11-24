@@ -1,4 +1,12 @@
 ---
+- name: Create backup dir
+  become: true
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+  tags:
+    - make_dir
+
 - name: Archive files
   become: true
   community.general.archive:
@@ -13,3 +21,11 @@
     dest: '{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz'
     loop: '{{ backup_targets }}'
 
+- name: Change ownership of archive directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    owner: "{{ ansible_user }}"
+    recurse: true
+  tags:
+    - chowning

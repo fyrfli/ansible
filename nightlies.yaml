@@ -1,0 +1,14 @@
+---
+- name: Nightly backups
+  hosts: all
+  vars_file:
+    - .vault
+    - .backupVars
+  tasks:
+    - include_tasks: archive.yaml
+    - include_tasks: joplinDBDump.yaml
+    - include_tasks: mysqlDump.yaml
+    - include_tasks: 3scopy.yaml
+    - include_tasks: pushover.yaml
+      vars:
+        msg_text: "Nightly backups completed - see email with details"

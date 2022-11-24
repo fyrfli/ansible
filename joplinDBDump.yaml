@@ -1,0 +1,30 @@
+---
+- name: Touch the target archive file for joplin db dump
+  ansible.builtin.file:
+    path: "{{ backup_dir }}/joplin-{{ archive_tag }}.sql"
+    state: touch
+  tags:
+    - psql_file
+
+- name: Dump a database in a docker container
+  community.docker.docker_container_exec:
+    container: joplin-db
+    argv:
+      - pg_dump
+      - --dbname=joplin
+      - --username=joplin
+      - --file=/tmp/joplin-{{ archive_tag }}.sql
+  tags:
+    - psqlr_dump
+  register: dump_output
+  notify:
+    - Push over
+
+- name: Copy dump to host
+  ansible.builtin.shell: docker cp joplin-db:/tmp/joplin-{{ archive_tag }}.sql {{ backup_dir }}
+  register: dockertohost_output
+  tags:
+    - docker_cp
+  notify:
+    - Push over
+
