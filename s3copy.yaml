@@ -1,18 +1,22 @@
 ---
+- name: Get list of files
+  ansible.builtin.find:
+    path: "{{ backup_dir }}"
+    patterns: "*"
+  register: file_list
+  tags: find_files_for_copy
+
 - name: Copy to DO
-  loop: "{{ lookup('fileglob', '{{ backup_dir }}/*',wantlist=true) }}"
   amazon.aws.aws_s3:
     aws_access_key: "{{ do_access_key }}"
     aws_secret_key: "{{ do_secret_key }}"
-    s3_url: "{{ s3_url }}"
-    region: "{{ s3_region }}"
-    bucket: "{{ s3_bucket }}"
-    object: "{{ jupiter_s3_dest }}/{{ archive_tag }}/{{ item | basename }}"
-    src: "{{ item }}"
+    s3_url: '{{ s3_url }}'
+    region: '{{ s3_region }}'
+    bucket: '{{ s3_bucket }}'
+    object: "{{ s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
+    src: "{{ item.path }}"
     mode: put
     overwrite: no
-  tags:
-    - s3copy
+  loop: "{{ file_list.files }}"
+  tags: s3copy
   register: s3copy_output
-  notify:
-    - Push over

@@ -1,7 +1,11 @@
 ---
 - name: Dump MySQL databases on host
+  become: true
   community.mysql.mysql_db:
+    login_user: '{{ mysql_user }}'
+    login_password: '{{ mysql_password }}'
     state: dump
     name: all
-    target: '{{ backup_dir }}/{{ archive_tag }}/mysql-{{ archive_tag }}.sql'
-    when: full_db_backup
+    target: '{{ backup_dir }}/mysql-{{ archive_tag }}.sql'
+  when: full_db_backup
+  tags: dump_all_mysql_dbs

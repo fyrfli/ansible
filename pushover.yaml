@@ -6,3 +6,4 @@
     msg: "{{ msg_text }}"
     pri: 0
   delegate_to: localhost
+  tags: send_msg_to_pushover

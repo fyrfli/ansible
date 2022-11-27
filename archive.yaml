@@ -4,22 +4,22 @@
   ansible.builtin.file:
     path: "{{ backup_dir }}"
     state: directory
-  tags:
-    - make_dir
+  tags: create_backup_dir
 
-- name: Archive files
+- name: Create backup files
   become: true
   community.general.archive:
     path: "{{ item }}"
     exclusion_patterns:
-      - '**/*tar.gz'
-      - '**/*tgz'
-      - '**/*deb'
-      - '**/*zip'
-      - '**/*vagrant*'
-      - '**/*VirtualBox*'
-    dest: '{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz'
-    loop: '{{ backup_targets }}'
+      - "**/*tar.gz"
+      - "**/*tgz"
+      - "**/*deb"
+      - "**/*zip"
+      - "**/*vagrant*"
+      - "**/*VirtualBox*"
+    dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
+  loop: "{{ backup_targets }}"
+  tags: create_archives
 
 - name: Change ownership of archive directory
   become: true
@@ -27,5 +27,5 @@
     path: "{{ backup_dir }}"
     owner: "{{ ansible_user }}"
     recurse: true
-  tags:
-    - chowning
+  when: not_me
+  tags: chown_files
