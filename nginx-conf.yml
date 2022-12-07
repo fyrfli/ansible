@@ -2,11 +2,6 @@
 - name: Create a new nginx config
   hosts: do
   become: true
-  vars:
-    - server_name: "{{ server_name }}"
-    - server_short: "{{ server_short }}"
-    - host_ip: "{{ host_ip }}"
-    - host_port: "{{ host_port }}"
   vars_files:
     - nginx-conf.vars
   tasks:
@@ -16,7 +11,7 @@
     - name: Create file from template in /etc/nginx/conf.d
       ansible.builtin.template:
         backup: yes
-        dest: /etc/nginx/conf.d/{{ server_short  }}.conf
+        dest: "/etc/nginx/conf.d/{{ server_short  }}.conf"
         src: /home/camille/ansible/nginx-host.conf
     - name: Restart nginx after creating the new config file
       ansible.builtin.systemd:
@@ -24,7 +19,7 @@
         state: reloaded
     - name: Get a certification for the domain
       ansible.builtin.command:
-        cmd: certbot --nginx -d {{ server_name }}
+        cmd: "certbot --nginx -d {{ server_name }}"
     - name: Restart nginx after installing certification
       ansible.builtin.systemd:
         name: nginx
