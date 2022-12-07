@@ -1,11 +1,18 @@
 ---
 - name: Create a new nginx config
-  hosts: localhost
+  hosts: do
   become: true
+  vars:
+    - server_name: "{{ server_name }}"
+    - server_short: "{{ server_short }}"
+    - host_ip: "{{ host_ip }}"
+    - host_port: "{{ host_port }}"
+  vars_files:
+    - nginx-conf.vars
   tasks:
     - name: Show me the money
       ansible.builtin.debug:
-        msg: "Server name: {{ server_name }} and the short name is: {{ server_short }} to be proxy'd to {{ host_ip  }}:{{ host_port }}"
+        msg: "Server name: {{ server_name }} and the short name is: {{ server_short }} to be proxy'd to {{ host_ip  }}:{{ host_port }} on {{ ansible_host }}"
     - name: Create file from template in /etc/nginx/conf.d
       ansible.builtin.template:
         backup: yes

@@ -10,4 +10,10 @@ Stay tuned as I do more with ansible.
 
 As of today (Sept. 5, 2022), I have 3 backups, a backup cleaner, and an apt update/upgrade playbook in play. Learning more and more. Realised I was leaking some information I should not have been leaking and fixed that. And now I am beginning to look at roles to make my playbooks more re-usable.
 
+---
+
+The backup scripts have been merged into one playbook. I don't use roles, but I do include tasks and set some variables which determine which tasks get applied to which hosts.
+
+Next step: roles.
+
 I <3 ansible and python!

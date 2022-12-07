@@ -1,6 +1,6 @@
 ---
 - name: Nightly backups
-  hosts: local,remote
+  hosts: all
   vars_files:
     - .vault
     - .backupVars
@@ -10,3 +10,15 @@
     - include_tasks: joplinDBDump.yaml
     - include_tasks: mysqlDump.yaml
     - include_tasks: s3copy.yaml
+    - name: Remove backup directory to save space
+      ansible.builtin.file:
+        path: '{{ backup_dir }}'
+        state: absent
+
+  handlers:
+    - name: Push over
+      community.general.pushover:
+        app_token: "{{ pushover_app_id }}"
+        user_key: "{{ pushover_user_id }}"
+        msg: "Nightly backup completed for {{ ansible_date_time.date }}"
+        pri: 0
