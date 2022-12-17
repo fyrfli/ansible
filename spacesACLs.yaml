@@ -1,17 +1,17 @@
 ---
-- name: Set lifecycle rules for DO spaces
+- name: Manage DigitalOcean Spaces ACLs
   hosts: localhost
   vars_files:
     - .vault
 
   tasks:
-    - name: Get current lifecycle rules
-      community.aws.s3_lifecycle:
+    - name: Get current ACLs
+      amazon.aws.s3_object:
         aws_access_key: "{{ do_access_key }}"
         aws_secret_key: "{{ do_secret_key }}"
         endpoint_url: "{{ s3_url }}"
         region: "{{ s3_region }}"
-        name: "{{ s3_bucket }}"
+        bucket: "{{ s3_bucket }}"
         prefix: "/i"
-        state: present
-        rule_id: hosted-file
+        permission: list
+        mode: get
