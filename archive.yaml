@@ -17,6 +17,8 @@
       - "**/*zip"
       - "**/*vagrant*"
       - "**/*VirtualBox*"
+      - "**/versions"
+      - "**/.vagrant"
     dest: "{{ backup_dir }}/{{ item.rsplit('/')[-1] }}-{{ archive_tag }}.tgz"
   loop: "{{ backup_targets }}"
   tags: create_archives
