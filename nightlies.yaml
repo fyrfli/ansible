@@ -1,15 +1,15 @@
 ---
 - name: Nightly backups
-  hosts: "{{ variable_host | default('all')}}"
+  hosts: "{{ variable_host | default('remote,local')}}"
   vars_files:
     - .vault
     - .backupVars
   become: true
   tasks:
-    - include_tasks: archive.yaml
-    - include_tasks: joplinDBDump.yaml
-    - include_tasks: mysqlDump.yaml
-    - include_tasks: s3copy.yaml
+    - ansible.builtin.include_tasks: archive.yaml
+    - ansible.builtin.include_tasks: joplinDBDump.yaml
+    - ansible.builtin.include_tasks: mysqlDump.yaml
+    - ansible.builtin.include_tasks: s3copy.yaml
     - name: Remove backup directory to save space
       ansible.builtin.file:
         path: '{{ backup_dir }}'

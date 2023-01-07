@@ -4,6 +4,8 @@
   ansible.builtin.file:
     path: "{{ backup_dir }}"
     state: directory
+    mode: 0644
+    follow: true
   tags: create_backup_dir
 
 - name: Create backup files
@@ -29,5 +31,7 @@
     path: "{{ backup_dir }}"
     owner: "{{ ansible_user }}"
     recurse: true
+    mode: 0644
+    follow: true
   when: not_me
   tags: chown_files

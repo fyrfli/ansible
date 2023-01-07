@@ -3,6 +3,8 @@
   ansible.builtin.file:
     path: "{{ backup_dir }}/joplin-{{ archive_tag }}.sql"
     state: touch
+    mode: 0644
+    follow: true
   tags: create_psql_output
   when: do_joplin
 

@@ -3,20 +3,26 @@
   ansible.builtin.find:
     path: "{{ backup_dir }}"
     patterns: "*"
+    follow: true
+    hidden: false
+    recurse: false
+    use_regex: false
+    get_checksum: false
   register: file_list
   tags: find_files_for_copy
 
 - name: Copy to DO
-  amazon.aws.aws_s3:
+  amazon.aws.s3_object:
     aws_access_key: "{{ do_access_key }}"
     aws_secret_key: "{{ do_secret_key }}"
-    s3_url: '{{ s3_url }}'
+    ec2_url: '{{ s3_url }}'
     region: '{{ s3_region }}'
     bucket: '{{ s3_bucket }}'
     object: "{{ s3_dest }}/{{ archive_tag }}/{{ item.path | basename }}"
     src: "{{ item.path }}"
     mode: put
     overwrite: no
+    dualstack: false
   loop: "{{ file_list.files }}"
   tags: s3copy
   register: s3copy_output

@@ -5,6 +5,18 @@
   vars_files:
     - .vault
   tasks:
+    - name: Find the files older than 10 days
+      become: true
+      ansible.builtin.find:
+        path: /u/backups/
+        age: 10d
+        recurse: true
+        follow: false
+        get_checksum: false
+        hidden: false
+        patterns: '[*]'
+        use_regex: false
+      register: file_list
     - name: Find directories older than 10 days
       ansible.builtin.find:
         path: /u/backups/
@@ -17,6 +29,15 @@
         patterns: '[*]'
         use_regex: false
       register: dir_list
+    - name: Delete old files
+      become: true
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+        mode: 0644
+        follow: false
+      loop: "{{ file_list.files }}"
+      delegate_to: "{{ ansible_host }}"
     - name: Delete the old directories too
       ansible.builtin.file:
         path: "{{ item.path }}"
