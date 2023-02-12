@@ -7,7 +7,7 @@
     password: "{{ email_password }}"
     secure: starttls
     to: camille.frantz@me.com
-    from: postmaster@fyrfli.email
+    sender: postmaster@fyrfli.email
     subject: " {{ message_title }} "
     body: "{{ message_text }}"
   delegate_to: localhost

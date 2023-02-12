@@ -1,5 +1,5 @@
 - name: Delete an object from a bucket
-  amazon.aws.aws_s3:
-  bucket: mybucket
-  object: /my/desired/key.txt
-  mode: delobj
+  amazon.aws.s3_object:
+    bucket: mybucket
+    object: /my/desired/key.txt
+    mode: delobj

@@ -1,6 +1,6 @@
 ---
 - name: Nightly backups
-  hosts: "{{ variable_host | default('remote,local')}}"
+  hosts: "{{ variable_host | default('local')}}"
   vars_files:
     - .vault
     - .backupVars

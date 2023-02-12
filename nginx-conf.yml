@@ -11,6 +11,7 @@
     - name: Create file from template in /etc/nginx/conf.d
       ansible.builtin.template:
         backup: yes
+        mode: 0644
         dest: "/etc/nginx/conf.d/{{ server_short  }}.conf"
         src: /home/camille/ansible/nginx-host.conf
     - name: Restart nginx after creating the new config file

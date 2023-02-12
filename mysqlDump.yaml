@@ -6,6 +6,6 @@
     login_password: '{{ mysql_password }}'
     state: dump
     name: all
-    target: '{{ backup_dir }}/mysql-{{ archive_tag }}.sql'
+    target: '{{ backup_dir }}/{{ archive_tag }}-mysql.sql'
   when: full_db_backup
   tags: dump_all_mysql_dbs

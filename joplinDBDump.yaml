@@ -1,9 +1,8 @@
 ---
 - name: Touch the target archive file for joplin db dump
   ansible.builtin.file:
-    path: "{{ backup_dir }}/joplin-{{ archive_tag }}.sql"
+    path: "{{ backup_dir }}/{{ archive_tag }}-joplin.sql"
     state: touch
-    mode: 0644
     follow: true
   tags: create_psql_output
   when: do_joplin
@@ -15,13 +14,13 @@
       - pg_dump
       - --dbname=joplin
       - --username=joplin
-      - --file=/tmp/joplin-{{ archive_tag }}.sql
+      - --file=/tmp/{{ archive_tag }}-joplin.sql
   tags: psql_dump
   register: dump_output
   when: do_joplin
 
 - name: Copy dump to host
-  ansible.builtin.shell: docker cp joplin-db:/tmp/joplin-{{ archive_tag }}.sql {{ backup_dir }}
+  ansible.builtin.shell: docker cp joplin-db:/tmp/{{ archive_tag }}-joplin.sql {{ backup_dir }}
   register: dockertohost_output
   tags: docker_cp
   when: do_joplin

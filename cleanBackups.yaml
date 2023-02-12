@@ -4,6 +4,7 @@
   gather_facts: false
   vars_files:
     - .vault
+  become: true
   tasks:
     - name: Find directories older than 10 days
       ansible.builtin.find:
@@ -24,7 +25,6 @@
         follow: false
         get_checksum: false
         hidden: false
-        mode: 0644
         recurse: true
       register: dir_list
       loop: "{{ dir_list.files }}"
