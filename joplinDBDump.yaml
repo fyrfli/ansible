@@ -5,7 +5,6 @@
     state: touch
     follow: true
   tags: create_psql_output
-  when: do_joplin
 
 - name: Dump a database in a docker container
   community.docker.docker_container_exec:
@@ -17,10 +16,8 @@
       - --file=/tmp/{{ archive_tag }}-joplin.sql
   tags: psql_dump
   register: dump_output
-  when: do_joplin
 
 - name: Copy dump to host
   ansible.builtin.shell: docker cp joplin-db:/tmp/{{ archive_tag }}-joplin.sql {{ backup_dir }}
   register: dockertohost_output
   tags: docker_cp
-  when: do_joplin

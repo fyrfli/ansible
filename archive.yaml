@@ -42,5 +42,5 @@
     owner: "{{ ansible_user }}"
     recurse: true
     follow: true
-  when: not_me
+  when: not_me | bool
   tags: chown_files

@@ -6,19 +6,65 @@
     - .backupVars
   become: true
   tasks:
-    - ansible.builtin.include_tasks: archive.yaml
-    - ansible.builtin.include_tasks: joplinDBDump.yaml
-    - ansible.builtin.include_tasks: mysqlDump.yaml
+    - name: Create backup dir
+      become: true
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        follow: true
+      tags: create_backup_dir
+
+    - name: Create backup files
+      become: true
+      community.general.archive:
+        path: "{{ item }}"
+        exclusion_patterns:
+          - "**/*tar.gz"
+          - "**/*tgz"
+          - "**/*deb"
+          - "**/*zip"
+          - "**/*vagrant*"
+          - "**/*VirtualBox*"
+          - "**/versions"
+          - "**/.vagrant"
+          - "**/.local"
+          - "**/*cache*"
+          - "**/Nextcloud"
+          - "**/Calibre*"
+          - "**/Documents"
+          - "**/Downloads"
+          - "**/Dropbox"
+          - "**/Music"
+          - "**/Pictures"
+          - "**/*Nextcloud*"
+          - "**/Sync"
+        dest: "{{ backup_dir }}//{{ archive_tag }}-{{ item.rsplit('/')[-1] }}.tgz"
+      loop: "{{ backup_targets }}"
+      tags: create_archives
+
+    - name: Change ownership of archive directory
+      become: true
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        owner: "{{ ansible_user }}"
+        recurse: true
+        follow: true
+      tags: chown_files
+
+    - name: Dump MySQL databases on host
+      become: true
+      community.mysql.mysql_db:
+        login_user: '{{ mysql_user }}'
+        login_password: '{{ mysql_password }}'
+        state: dump
+        name: all
+        target: '{{ backup_dir }}/{{ archive_tag }}-mysql.sql'
+      tags: dump_all_mysql_dbs
+      when: ansible_facts.nodename in ["jupiter", "fyrfli"]
+
     - ansible.builtin.include_tasks: s3copy.yaml
+
     - name: Remove backup directory to save space
       ansible.builtin.file:
         path: '{{ backup_dir }}'
         state: absent
-
-  handlers:
-    - name: Push over
-      community.general.pushover:
-        app_token: "{{ pushover_app_id }}"
-        user_key: "{{ pushover_user_id }}"
-        msg: "Nightly backup completed for {{ ansible_date_time.date }}"
-        pri: 0
