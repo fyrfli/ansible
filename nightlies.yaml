@@ -68,3 +68,8 @@
       ansible.builtin.file:
         path: '{{ backup_dir }}'
         state: absent
+
+  handlers:
+    - name: Heartbeat
+      ansible.builtin.command:
+        cmd: curl https://betteruptime.com/api/v1/heartbeat/TNwqnuTiSYk8Thm4ypQwVZx3
