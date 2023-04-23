@@ -3,11 +3,11 @@
   community.general.mail:
     host: smtp.mailgun.org
     port: 587
-    username: postmaster@fyrfli.email
+    username: postmaster@fyrf.li
     password: "{{ email_password }}"
     secure: starttls
     to: camille.frantz@me.com
-    sender: postmaster@fyrfli.email
+    sender: postmaster@fyrf.li
     subject: " {{ message_title }} "
     body: "{{ message_text }}"
   delegate_to: localhost
