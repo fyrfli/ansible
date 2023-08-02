@@ -26,7 +26,7 @@
           - "**/*vagrant*"
           - "**/*VirtualBox*"
           - "**/versions"
-          - "**/.vagrant"
+          - "**/.vagrant*"
           - "**/.local"
           - "**/*cache*"
           - "**/Nextcloud"
@@ -38,6 +38,7 @@
           - "**/Pictures"
           - "**/*Nextcloud*"
           - "**/Sync"
+          - "**/Python*"
         dest: "{{ backup_dir }}//{{ archive_tag }}-{{ item.rsplit('/')[-1] }}.tgz"
       loop: "{{ backup_targets }}"
       tags: create_archives
@@ -62,14 +63,9 @@
       tags: dump_all_mysql_dbs
       when: ansible_facts.nodename in ["jupiter", "fyrfli"]
 
-    - ansible.builtin.include_tasks: s3copy.yaml
+#    - ansible.builtin.include_tasks: s3copy.yaml
 
-    - name: Remove backup directory to save space
-      ansible.builtin.file:
-        path: '{{ backup_dir }}'
-        state: absent
-
-  handlers:
-    - name: Heartbeat
-      ansible.builtin.command:
-        cmd: "curl https://betteruptime.com/api/v1/heartbeat/TNwqnuTiSYk8Thm4ypQwVZx3"
+#    - name: Remove backup directory to save space
+#      ansible.builtin.file:
+#        path: '{{ backup_dir }}'
+#        state: absent
